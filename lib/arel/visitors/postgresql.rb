@@ -23,6 +23,12 @@ module Arel
         collector << "DISTINCT ON ( "
         visit(o.expr, collector) << " )"
       end
+
+      def visit_ordering_expr(o, collector, direction)
+        collector = visit(o.expr, collector) << ' ' << direction
+        collector << " NULLS #{o.nulls.to_s.upcase}" if o.nulls
+        collector
+      end
     end
   end
 end

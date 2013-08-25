@@ -450,12 +450,12 @@ module Arel
         collector << "(#{o.to_sql.rstrip})"
       end
 
-      def visit_Arel_Nodes_Ascending o, collector
-        visit(o.expr, collector) << " ASC"
+      def visit_Arel_Nodes_Ascending(o, collector)
+        visit_ordering_expr(o, collector, 'ASC')
       end
 
-      def visit_Arel_Nodes_Descending o, collector
-        visit(o.expr, collector) << " DESC"
+      def visit_Arel_Nodes_Descending(o, collector)
+        visit_ordering_expr(o, collector, 'DESC')
       end
 
       def visit_Arel_Nodes_Group o, collector
@@ -818,6 +818,21 @@ module Arel
         else
           collector
         end
+      end
+
+      def visit_ordering_expr(o, collector, direction)
+        if o.nulls
+          collector << 'CASE WHEN '
+
+          ordering_expr = compile(o.expr)
+
+          collector << ordering_expr
+          collector << [' IS NULL THEN 0 ELSE 1 END', o.nulls == :first ? 'ASC' : 'DESC'].join(' ')
+          collector << ', '
+          collector << ordering_expr
+        else
+          visit(o.expr, collector)
+        end << ' ' << direction
       end
     end
   end
